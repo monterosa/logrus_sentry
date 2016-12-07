@@ -35,6 +35,7 @@ type SentryHook struct {
 
 	ignoreFields map[string]struct{}
 	extraFilters map[string]func(interface{}) interface{}
+	tagFields map[string]string
 }
 
 // The Stacktracer interface allows an error type to return a raven.Stacktrace.
@@ -104,6 +105,7 @@ func NewWithClientSentryHook(client *raven.Client, levels []logrus.Level) (*Sent
 		levels:       levels,
 		ignoreFields: make(map[string]struct{}),
 		extraFilters: make(map[string]func(interface{}) interface{}),
+		tagFields: make(map[string]string),
 	}, nil
 }
 
@@ -138,6 +140,14 @@ func (hook *SentryHook) Fire(entry *logrus.Entry) error {
 	if user, ok := df.getUser(); ok {
 		packet.Interfaces = append(packet.Interfaces, user)
 	}
+
+
+	for extraKey, tagKey := range hook.tagFields {
+		if v, ok := df.data[extraKey].(string); ok {
+			packet.Tags = append(packet.Tags, raven.Tag{Key: tagKey, Value: v})
+		}
+	}
+
 
 	// set stacktrace data
 	stConfig := &hook.StacktraceConfiguration
@@ -279,4 +289,12 @@ func formatData(value interface{}) (formatted interface{}) {
 	default:
 		return value
 	}
+}
+
+
+// Extract a field from entry.Data and copy the value to the
+// tag defined in "to".
+func (hook *SentryHook) AddTagFromExtra(from string, to string) (*SentryHook)  {
+	hook.tagFields[from] = to
+	return hook
 }
