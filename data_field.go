@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	fieldEventID     = "event_id"
-	fieldLogger      = "logger"
-	fieldServerName  = "server_name"
-	fieldTags        = "tags"
-	fieldHTTPRequest = "http_request"
-	fieldUser        = "user"
+	fieldEventID         = "event_id"
+	fieldLogger          = "logger"
+	fieldServerName      = "server_name"
+	fieldTags            = "tags"
+	fieldHTTPRequest     = "http_request"
+	fieldHTTPRequestBody = "http_request_body"
+	fieldUser            = "user"
 )
 
 type dataField struct {
@@ -76,6 +77,15 @@ func (d *dataField) getHTTPRequest() (*http.Request, bool) {
 	}
 	return nil, false
 }
+
+func (d *dataField) getHTTPRequestBody() (string, bool) {
+	if rb, ok := d.data[fieldHTTPRequestBody].(string); ok {
+		d.omitList[fieldHTTPRequestBody] = struct{}{}
+		return rb, true
+	}
+	return "", false
+}
+
 
 func (d *dataField) getEventID() (string, bool) {
 	eventID, ok := d.data[fieldEventID].(string)
